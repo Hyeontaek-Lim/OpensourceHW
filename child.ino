@@ -1,25 +1,27 @@
-#include <LiquidCrystal.h>  //LCD ¶óÀÌºê·¯¸®
+
+
+#include <LiquidCrystal.h>  //LCD ë¼ì´ë¸ŒëŸ¬ë¦¬
 #include "Metro.h"
 #define esp8266 Serial2
 #define BT Serial1
 #define DEBUG true
 
-const int speaker = 10;   // ½ºÇÇÄ¿ µğÁöÅĞ ÇÉ
-String IPaddress; // ÇöÀç ¾ÆµÎÀÌ³ë IP
-String phoneNumber; // º¸È£ÀÚ ¿¬¶ôÃ³
-String ssid = "hongbin"; // ¿ÍÀÌÆÄÀÌ ID
-String pass = "tlghk123"; // ¿ÍÀÌÆÄÀÌ pass
-String destIP = "192.168.1.4"; // À¥ÀÇ IPÁÖ¼Ò
-String destPort = "3000"; // Æ÷Æ®¹øÈ£ Rails·Î °íÁ¤
+const int speaker = 10;   // ìŠ¤í”¼ì»¤ ë””ì§€í„¸ í•€
+String IPaddress; // í˜„ì¬ ì•„ë‘ì´ë…¸ IP
+String phoneNumber; // ë³´í˜¸ì ì—°ë½ì²˜
+String ssid = "hongbin"; // ì™€ì´íŒŒì´ ID
+String pass = "tlghk123"; // ì™€ì´íŒŒì´ pass
+String destIP = "192.168.1.4"; // ì›¹ì˜ IPì£¼ì†Œ
+String destPort = "3000"; // í¬íŠ¸ë²ˆí˜¸ Railsë¡œ ê³ ì •
 String st = "";
-bool state = false; // ¹Ì¾Æ»óÅÂ Ç¥½Ã
+bool state = false; // ë¯¸ì•„ìƒíƒœ í‘œì‹œ
 bool connet = false;
 int count = 0;
 int exitcnt=0;
 Metro sendtimer(1000);
 Metro checktimer(50000); 
 bool flag = false;
-LiquidCrystal lcd(4, 5, 6, 7, 8, 9); //lcd ¼ÂÆÃ
+LiquidCrystal lcd(4, 5, 6, 7, 8, 9); //lcd ì…‹íŒ…
 byte BTShape_upper[8] {
   B000000, B001000, B001100, B001010, B001001, B101010, B011100, B001000
 };
@@ -27,11 +29,11 @@ byte BTShape_under[8] {
   B001000, B011100, B101010, B001001, B001010, B001100, B001000, B000000
 };
 
-const int RGB_Led[3] = { 13, 12, 11 };    //RGB µğÁöÅĞ ÇÉ
+const int RGB_Led[3] = { 13, 12, 11 };    //RGB ë””ì§€í„¸ í•€
 int RGB[3] = {0, 0, 0};
 
 
-/* RGB °ªÀ» ¼³Á¤ÇØ¼­ ´Ù¾çÇÑ »ö»óÀ» ³¾ ¼ö ÀÖ´Ù. */
+/* RGB ê°’ì„ ì„¤ì •í•´ì„œ ë‹¤ì–‘í•œ ìƒ‰ìƒì„ ë‚¼ ìˆ˜ ìˆë‹¤. */
 void SetColor(const int red, const int green, const int blue) {
   digitalWrite(RGB_Led[0], red);
   digitalWrite(RGB_Led[1], green);
@@ -61,11 +63,11 @@ String sendData(String command, const int timeout, boolean debug)
 void sendQuery(String str)
 {
   String t;
-  sendData("AT+RST\r\n", 1000, DEBUG); // ÃÊ±âÈ­
+  sendData("AT+RST\r\n", 1000, DEBUG); // ì´ˆê¸°í™”
   sendData("AT+CIPMUX=0\r\n", 2000, DEBUG);
   do
     t = sendData("AT+CIPSTART=\"TCP\",\"" + destIP + "\"," + destPort + "\r\n", 3000, DEBUG);
-  while (t.indexOf("Linked") == -1); // ¸µÅ© ¿¬°áµÉ¶§±îÁö
+  while (t.indexOf("Linked") == -1); // ë§í¬ ì—°ê²°ë ë•Œê¹Œì§€
   sendData("AT+CIPSEND=" + String(str.length()) + "\r\n", 2000, DEBUG);
   sendData(str, 2000, DEBUG);
   sendData("AT+CIPCLOSE\r\n", 1000, DEBUG); // turn on server on port 80
@@ -73,16 +75,16 @@ void sendQuery(String str)
 
 String getInit() 
 {
-  /* WIFI¸ğµâÀ» initÇÑ´Ù.
-   * 1. SSID¿Í password·Î ¿ÍÀÌÆÄÀÌ Á¢¼Ó
-   * 2. CIFSR·Î IPÁÖ¼Ò ¹İÈ¯
-   * 3. CWMODE=3À¸·Î client, AP ¸ğµå »ç¿ë
-   * 4. CIFSR·Î ¾òÀº ÇöÀç¸ğµâÀÇ IPÁÖ¼Ò ¸®ÅÏ
+  /* WIFIëª¨ë“ˆì„ inití•œë‹¤.
+   * 1. SSIDì™€ passwordë¡œ ì™€ì´íŒŒì´ ì ‘ì†
+   * 2. CIFSRë¡œ IPì£¼ì†Œ ë°˜í™˜
+   * 3. CWMODE=3ìœ¼ë¡œ client, AP ëª¨ë“œ ì‚¬ìš©
+   * 4. CIFSRë¡œ ì–»ì€ í˜„ì¬ëª¨ë“ˆì˜ IPì£¼ì†Œ ë¦¬í„´
   */
   String temp = "";
   String res = "";
 
-  sendData("AT+CWJAP=\"" + ssid + "\",\"" + pass + "\"\r\n", 7000, DEBUG); // Á¢¼ÓÇÏ±â
+  sendData("AT+CWJAP=\"" + ssid + "\",\"" + pass + "\"\r\n", 7000, DEBUG); // ì ‘ì†í•˜ê¸°
   temp = sendData("AT+CIFSR\r\n", 1500, DEBUG);
   sendData("AT+CWMODE=3\r\n", 1000, DEBUG);
   int size = temp.length();
@@ -118,16 +120,16 @@ String getInit()
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void setup() {
   delay(3000);
-  Serial.begin(9600);    //ºí·çÅõ½º¿Í ¾ÆµÎÀÌ³ëÀÇ Åë½Å ¼Óµµ ¼³Á¤
-  BT.begin(9600);     //½Ã¸®¾ó Åë½ÅÀÇ ¼Óµµ
+  Serial.begin(9600);    //ë¸”ë£¨íˆ¬ìŠ¤ì™€ ì•„ë‘ì´ë…¸ì˜ í†µì‹  ì†ë„ ì„¤ì •
+  BT.begin(9600);     //ì‹œë¦¬ì–¼ í†µì‹ ì˜ ì†ë„
   esp8266.begin(9600);
-  phoneNumber = "1038373355"; // ÀÓÀÇÀÇ ÇÚµåÆù¹øÈ£ ÀúÀå
+  phoneNumber = "1038373355"; // ì„ì˜ì˜ í•¸ë“œí°ë²ˆí˜¸ ì €ì¥
 
   IPaddress = getInit();
   /// LCD INIT//
   lcd.createChar(0, BTShape_upper);
   lcd.createChar(1, BTShape_under);
-  lcd.begin(16, 2);   //lcd ÃÊ±âÈ­ ÀÛ¾÷
+  lcd.begin(16, 2);   //lcd ì´ˆê¸°í™” ì‘ì—…
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Hello world !");
@@ -142,14 +144,14 @@ void setup() {
   Serial.print("BT Wait");
   while (!BT.available()) {
     delay(1000);
-    Serial.print('.'); // ºí·çÅõ½º°¡ ¿¬°áÀÌ µÇ¾îÀÖÁö¾ÊÀ¸¸é Á¤Áö»óÅÂÀÌ´Ù.]
+    Serial.print('.'); // ë¸”ë£¨íˆ¬ìŠ¤ê°€ ì—°ê²°ì´ ë˜ì–´ìˆì§€ì•Šìœ¼ë©´ ì •ì§€ìƒíƒœì´ë‹¤.]
   }
   Serial.println();Serial.println("Connect OK");
   lcd.clear(); lcd.home(); lcd.print("WiFi wait..");
   
-  sendQuery("POST /home/create?number=" + phoneNumber + "&ip=" + IPaddress + " HTTP/1.1\r\n\r\n"); // WEB µî·Ï
+  sendQuery("POST /home/create?number=" + phoneNumber + "&ip=" + IPaddress + " HTTP/1.1\r\n\r\n"); // WEB ë“±ë¡
   sendData("AT+CIPMUX=1\r\n", 1000, DEBUG);
-  sendData("AT+CIPSERVER=1,80\r\n", 1000, DEBUG); // µ¥ÀÌÅÍ¸¦ ¹ŞÀ» ¼ö ÀÖ°Ô ¼­¹ö¸¦ ¿­¾îÁÜ
+  sendData("AT+CIPSERVER=1,80\r\n", 1000, DEBUG); // ë°ì´í„°ë¥¼ ë°›ì„ ìˆ˜ ìˆê²Œ ì„œë²„ë¥¼ ì—´ì–´ì¤Œ
   BT.print("o");
 }
 
@@ -159,7 +161,7 @@ void setup() {
 void loop() {
 
 
-    /* ºí·çÅõ½º ¸ğ¾ç LCD¿¡ Âï±â */
+    /* ë¸”ë£¨íˆ¬ìŠ¤ ëª¨ì–‘ LCDì— ì°ê¸° */
   if (BT.available()) {
     char c = BT.read();
     Serial.println(c);
@@ -181,7 +183,7 @@ void loop() {
     }
 
   }
-  // ÀÏÁ¤½Ã°£ ÈÄ¿¡ cou
+  // ì¼ì •ì‹œê°„ í›„ì— cou
   if(checktimer.check())
   {
     if(count<10)
@@ -190,14 +192,14 @@ void loop() {
     exitcnt=0;
   }
  
-  // ÀÏÁ¤ ½Ã°£¸¶´Ù ¿¬°áµÇ¾ú´Ù´Â ¹®ÀÚ C¸¦ º¸³»ÁÜ.
+  // ì¼ì • ì‹œê°„ë§ˆë‹¤ ì—°ê²°ë˜ì—ˆë‹¤ëŠ” ë¬¸ì Cë¥¼ ë³´ë‚´ì¤Œ.
   if(sendtimer.check())  
   {
     if(!state)
       BT.print("C");
   }
   
-  if(state!=connet) // »óÅÂ°¡ ¹Ù²¼À»¶§ 1È¸½ÇÇàÇØ¾ßÇÏ´Â ¸í·É¾î
+  if(state!=connet) // ìƒíƒœê°€ ë°”ê¼ˆì„ë•Œ 1íšŒì‹¤í–‰í•´ì•¼í•˜ëŠ” ëª…ë ¹ì–´
   {
     connet = state;
     if(!flag)
@@ -214,11 +216,11 @@ void loop() {
   }
 
 
-  /* ¹Ì¾Æ»óÅÂÀÇ ¾×¼Ç. */
+  /* ë¯¸ì•„ìƒíƒœì˜ ì•¡ì…˜. */
   if (state) {
     RGBInit();
     tone(speaker,523,1000);
-    SetColor(255,0,0); // RED Ãâ·Â
+    SetColor(255,0,0); // RED ì¶œë ¥
     delay(500);
     noTone(speaker);
     lcd.clear();
@@ -235,7 +237,7 @@ void loop() {
     lcd.write(byte(1));
   }
 
-  while (esp8266.available()) // ¼­¹ö¿¡¼­ REQUEST¸¦ ÁÙ ¶§
+  while (esp8266.available()) // ì„œë²„ì—ì„œ REQUESTë¥¼ ì¤„ ë•Œ
   {
     char ch = esp8266.read();
     if (ch == '\r' || ch == '\n')
@@ -244,7 +246,7 @@ void loop() {
       int temp = st.indexOf("state");
       if (temp != -1)
       {  
-        state = st[temp + 6] - '0'; // ½ºÅ×ÀÌÆ® °ª º¯°æ
+        state = st[temp + 6] - '0'; // ìŠ¤í…Œì´íŠ¸ ê°’ ë³€ê²½
         connet = state;
         if(state) 
           BT.write('M');
